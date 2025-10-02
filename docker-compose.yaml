@@ -1,0 +1,31 @@
+services:
+  ros_humble:
+    build:
+      context: .                   # Onde está o Dockerfile do ROS
+      dockerfile: Dockerfile       # Nome do Dockerfile
+    image: humble_devel:latest    # Nome/tag da imagem gerada
+    container_name: ros_humble
+    network_mode: host              # Compartilha a rede do host (bom para ROS)
+    privileged: true                # Necessário para acessar dispositivos do host
+    stdin_open: true                # Mantém stdin aberto (interativo)
+    tty: true                        # Permite usar bash
+    restart: unless-stopped
+
+    environment:
+      - DISPLAY=${DISPLAY}                   # Para aplicações gráficas
+      - QT_X11_NO_MITSHM=1                    # Previne erro de Qt
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+      - ROS_DOMAIN_ID=0                       # Ajuste conforme seu ambiente ROS
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp    # Pode trocar por CycloneDDS, etc.
+
+    volumes:
+      - .:/workspace                          # Monta o diretório atual no container
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw       # Compartilha o servidor X para GUIs
+      - /dev:/dev                             # Permite acesso a dispositivos (ex.: câmeras)
+      - ros_data:/root/.ros                   # Volume persistente para configs/logs
+
+    devices:
+      - /dev/dri:/dev/dri                      # GPU Intel/AMD para aceleração gráfica
+
+volumes:
+  ros_data:
